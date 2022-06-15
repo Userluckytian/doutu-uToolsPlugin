@@ -240,8 +240,6 @@ copyImg2 = (imgUrl, ctrlV) => {
 
 }
 
-
-
 /**
  * 清理缓存的图片
  */

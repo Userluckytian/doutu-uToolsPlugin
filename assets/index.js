@@ -20,7 +20,7 @@ utools.onPluginEnter(({ code, type, payload }) => {
     } else {
         $(document.body).removeClass('dark-mode');
     }
-   
+
     utools.setSubInput(({
         text
     }) => {
@@ -38,10 +38,10 @@ utools.onPluginEnter(({ code, type, payload }) => {
         text = payload;
         utools.setSubInputValue(text);
         enterText();
-    }else{
+    } else {
         recommendPic()
     }
- 
+
 });
 
 $(document).keydown(e => {
@@ -101,13 +101,14 @@ $(document).scroll(() => {
 
 
 function getPic(word, page_num) {
-    if(word==''){
-        return 
+    if (word == '') {
+        return
     }
     $('body').css('background-image', 'none')
     num = getSource()
     eval("getPic_" + num + "(word,page_num)");
 }
+
 
 //图片来源01
 function getPic_1(word, page_num) {
@@ -119,20 +120,23 @@ function getPic_1(word, page_num) {
         $(".content ul").html('');
     }
     var append_html = ""
-    var url = "http://www.52doutu.cn/api/?types=search&action=searchpic&limit=60&wd=" + word + "&offset=" + (page_num - 1);
-    $.get(url, function (data) {
-        if(data.rows==undefined){
-            getPicError()
+    var url = "https://doutu.lccyy.com/doutu/items?keyword=" + word + "&pageNum=" + page_num;
+    $.get(url, function (datainfo) {
+        const data = JSON.parse(datainfo);
+        if (data.totalSize <= 0) {
+            utools.showNotification("换个关键词吧");
+            // getPicError()
             return
         }
         append_html = "";
-        data.rows.forEach(function (u) {
+        data.items.forEach(function (u) {
             append_html += "<li><img onmouseenter=\"bigImg(this)\" src='" + u.url + "' onerror=\"this.onerror='';src='assets/loading.gif'\" /></li>";
         })
         $(".content ul").append(append_html);
         setTimeout(function () { getPicThen() }, 1000);
     }).fail(function () {
-        getPicError()
+        utools.showNotification("换个关键词吧");
+        // getPicError()
     });
 }
 
@@ -146,17 +150,31 @@ function getPic_2(word, page_num) {
         $(".content ul").html('');
     }
     var append_html = ""
-    var url = "https://www.doutula.com/search?type=photo&more=1&keyword=" + word + "&page=" + page_num;
-    $.get(url, function (data) {
-        var urlArr = window.matchImgUrl(data);
-        append_html = "";
-        urlArr.forEach(function (u) {
-            append_html += "<li><img onmouseenter=\"bigImg(this)\" src='" + u + "' onerror=\"this.onerror='';src='assets/loading.gif'\" /></li>";
-        })
-        $(".content ul").append(append_html);
-        setTimeout(function () { getPicThen() }, 1000);
-    }).fail(function () {
-        getPicError()
+    var url = "http://doutu.ucode.top/api/getpng?tokenId=F96C2856-02FA-4763-B82F-62D0E22AEE47&title=" + word + "&pageIndex=" + page_num;
+    $.ajax({
+        type: "GET",
+        headers: {
+            'Content-Type': "application/json; charset=utf-8"
+        },
+        url,
+        success: function (datainfo) {
+            const data = JSON.parse(datainfo);
+            if (!data.IsSuccess) {
+                utools.showNotification("换个关键词吧");
+                // getPicError()
+                return
+            }
+            append_html = "";
+            data.Data.forEach(function (u) {
+                append_html += "<li><img onmouseenter=\"bigImg(this)\" src='" + u.url + "' onerror=\"this.onerror='';src='assets/loading.gif'\" /></li>";
+            })
+            $(".content ul").append(append_html);
+            setTimeout(function () { getPicThen() }, 1000);
+        },
+        error: function (err) {
+            utools.showNotification("换个关键词吧");
+            // getPicError();
+        }
     });
 }
 
@@ -189,11 +207,11 @@ function getPic_3(word, page_num) {
     if (page_num <= 1) {
         $(".content ul").html('');
     }
-    s = (page_num - 1)*48
+    s = (page_num - 1) * 48
     var append_html = ""
     var url = "http://pic.sogou.com/napi/wap/searchlist";
 
-    $.post(url, { start: s,keyword:word }, function (result) {
+    $.post(url, { start: s, keyword: word }, function (result) {
         console.log(result)
         // $("span").html(result);
         $.each(result.data.picResult.items, function (i, item) {
@@ -503,7 +521,7 @@ function setSourceQuick(num) {
 }
 
 function enterText() {
-    if(text==''){
+    if (text == '') {
         return
     }
     // utools.setExpendHeight(500);
@@ -531,7 +549,7 @@ function getPicError() {
     utools.showNotification("当前图源访问异常【" + sourceArr[getSource()] + "】，请切换图源或检查网络状态", clickFeatureCode = null, silent = false)
 }
 
-function showOriginBar(){
+function showOriginBar() {
     $('.origin-bar span').removeClass("origin-bar-span-selected");
     theId = getSource();
     $(".origin-bar").children("span").eq(theId - 1).addClass("origin-bar-span-selected");
